@@ -1,0 +1,94 @@
+---
+title: "Credit_Card_Default_logistic Regression"
+output: html_document
+date: "2026-09-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+# Logistic Regression 
+ 
+library(readxl)
+ 
+# Load and skip the first row using read_excel
+credit_card_default <- read_excel("C:/Users/anjan/Downloads/default of credit card clients.xls",
+                                   col_names = TRUE)
+ 
+# Show the structure of the dataset
+str(credit_card_default)
+ 
+names(credit_card_default)
+ 
+names(credit_card_default)[names(credit_card_default) == "default payment next month"] <- "Default"
+ 
+# Check if the column names are changed
+names(credit_card_default)
+ 
+# Build a logistic regression model to predict default using PAY_0, BILL_AMT1 and LIMIT_BAL as predictors
+logistic_model <- glm(Default ~ PAY_0 + BILL_AMT1 + LIMIT_BAL, data = credit_card_default, family = binomial)
+summary(logistic_model)
+ 
+# Calculate the r squared value and the adjusted r squared value
+r_squared <- 1 - (logistic_model$deviance / logistic_model$null.deviance)
+n_squared <- 1 - (1 - r_squared) * (nrow(credit_card_default) - 1) / (nrow(credit_card_default) - length(logistic_model$coefficients) - 1)
+r_squared
+n_squared
+ 
+# Calculate a confusion matrix to evaluate the model
+predicted_probabilities <- predict(logistic_model, type = "response")
+predicted_classes <- ifelse(predicted_probabilities > 0.5, 1, 0)
+confusion_matrix <- table(Predicted = predicted_classes, Actual = credit_card_default$Default)
+confusion_matrix
+ 
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+accuracy
+ 
+# Add an interaction term between BILL_AMT1 and LIMIT_BAL and build a new model using the
+# interaction term, sex, age, and education as predictors
+new_logistic_model <- glm(
+  Default ~ PAY_0 + BILL_AMT1 * LIMIT_BAL + SEX + AGE + EDUCATION,
+  data = credit_card_default,
+  family = binomial
+)
+summary(new_logistic_model)
+ 
+# Calculate the r squared value and the adjusted r squared value for the new model
+r_squared_new <- 1 - (new_logistic_model$deviance / new_logistic_model$null.deviance)
+n_squared_new <- 1 - (1 - r_squared_new) * (nrow(credit_card_default) - 1) / (nrow(credit_card_default) - length(new_logistic_model$coefficients) - 1)
+r_squared_new
+n_squared_new
+ 
+# Calculate a confusion matrix to evaluate the new model
+predicted_probabilities_new <- predict(new_logistic_model, type = "response")
+predicted_classes_new <- ifelse(predicted_probabilities_new > 0.5, 1, 0)
+confusion_matrix_new <- table(Predicted = predicted_classes_new, Actual = credit_card_default$Default)
+confusion_matrix_new
+ 
+accuracy_new <- sum(diag(confusion_matrix_new)) / sum(confusion_matrix_new)
+accuracy_new
+ 
+# Calculate AIC to compare the two models
+aic_original <- AIC(logistic_model)
+aic_new <- AIC(new_logistic_model)
+aic_original
+aic_new
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
